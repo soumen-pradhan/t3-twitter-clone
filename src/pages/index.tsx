@@ -1,28 +1,45 @@
 import { SignInButton, SignOutButton, auth, useUser } from "@clerk/nextjs";
 import Head from "next/head";
-import { RouterOutputs, api } from "~/utils/api";
 import Image from "next/image";
-
 import dayjs from "dayjs";
+
+import { RouterOutputs, api } from "~/utils/api";
 import { LoadingPage } from "~/components/loading";
+import { useState } from "react";
 
 const CreatePostWizard = () => {
   const { user } = useUser();
   if (!user) return null;
 
-  console.log(user);
+  const [input, setInput] = useState("");
+
+  const ctx = api.useContext();
+
+  const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+      ctx.posts.getAll.invalidate();
+    }
+  });
 
   return (
     <div className="flex gap-3 w-full">
-      <img
+      <Image
         className="h-10 rounded-full"
         src={user.profileImageUrl}
-        alt="Profile Image"
+        alt={`${user.username}'s Profile Image`}
+        width={40}
+        height={40}
       />
       <input
         className="bg-transparent grow outline-none"
         placeholder="Type some reactions"
+        type="text"
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        disabled={isPosting}
       />
+      <button onClick={() => mutate({ content: input })}>Post</button>
     </div>
   );
 }
@@ -34,13 +51,13 @@ const PostView = (props: PostWithUser) => {
   return (
     <div className="flex gap-3 p-4 border-b border-slate-400">
       <Image
-        className="h-8 rounded-full"
+        className="h-10 rounded-full"
         src={author.profileImageUrl}
         alt={`${author.username}'s profile picture`}
-        width={32}
-        height={32}
+        width={40}
+        height={40}
       />
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2">
         <div>
           <span className="text-sm">{`@${author.username}`}</span>
           {" · "}
@@ -48,7 +65,7 @@ const PostView = (props: PostWithUser) => {
             {dayjs(post.createdAt).format("YYYY-MM-DD · HH:MM")}
           </span>
         </div>
-        <span>{post.content}</span>
+        <span className="text-xl">{post.content}</span>
       </div>
     </div>
   );
