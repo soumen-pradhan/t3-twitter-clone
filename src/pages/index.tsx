@@ -1,8 +1,10 @@
 import { SignInButton, SignOutButton, auth, useUser } from "@clerk/nextjs";
 import Head from "next/head";
 import { RouterOutputs, api } from "~/utils/api";
+import Image from "next/image";
 
 import dayjs from "dayjs";
+import { LoadingPage } from "~/components/loading";
 
 const CreatePostWizard = () => {
   const { user } = useUser();
@@ -31,10 +33,12 @@ const PostView = (props: PostWithUser) => {
 
   return (
     <div className="flex gap-3 p-4 border-b border-slate-400">
-      <img
+      <Image
         className="h-8 rounded-full"
         src={author.profileImageUrl}
-        alt="Post Author URL"
+        alt={`${author.username}'s profile picture`}
+        width={32}
+        height={32}
       />
       <div className="flex flex-col">
         <div>
@@ -55,7 +59,7 @@ export default function Home() {
 
   const { data, isLoading } = api.posts.getAll.useQuery();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <LoadingPage />;
   if (!data) return <div>No data found</div>;
 
   return (
