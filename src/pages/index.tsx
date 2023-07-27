@@ -54,13 +54,28 @@ const PostView = (props: PostWithUser) => {
   );
 };
 
-export default function Home() {
-  const user = useUser();
+const Feed = () => {
+  const { data, isLoading: feedLoading } = api.posts.getAll.useQuery();
 
-  const { data, isLoading } = api.posts.getAll.useQuery();
-
-  if (isLoading) return <LoadingPage />;
+  if (feedLoading) return <LoadingPage />;
   if (!data) return <div>No data found</div>;
+
+  return (
+    <div className="flex flex-col">
+      {data?.map(fullPost => (
+        <PostView {...fullPost} key={fullPost.post.id} />
+      ))}
+    </div>
+  );
+};
+
+export default function Home() {
+  const { isSignedIn, isLoaded: userLoaded } = useUser();
+
+  // start fetch early to cache
+  api.posts.getAll.useQuery();
+
+  if (!userLoaded) return <div />;
 
   return (
     <>
@@ -71,19 +86,17 @@ export default function Home() {
       </Head>
       <main className="flex justify-center">
         <div className="md:max-w-2xl w-full border-x border-slate-400 h-screen">
+
           <div className="border-b border-slate-400 p-4 flex">
-            {!user.isSignedIn && (
+            {!isSignedIn && (
               <div className="flex justify-center">
                 <SignInButton />
               </div>
             )}
-            {!!user.isSignedIn && <CreatePostWizard />}
+            {!!isSignedIn && <CreatePostWizard />}
           </div>
-          <div className="flex flex-col">
-            {data?.map(fullPost => (
-              <PostView {...fullPost} key={fullPost.post.id} />
-            ))}
-          </div>
+
+          <Feed />
         </div>
       </main>
     </>
