@@ -2,6 +2,8 @@ import { SignInButton, SignOutButton, auth, useUser } from "@clerk/nextjs";
 import Head from "next/head";
 import { RouterOutputs, api } from "~/utils/api";
 
+import dayjs from "dayjs";
+
 const CreatePostWizard = () => {
   const { user } = useUser();
   if (!user) return null;
@@ -38,7 +40,9 @@ const PostView = (props: PostWithUser) => {
         <div>
           <span className="text-sm">{`@${author.username}`}</span>
           {" · "}
-          <span className="text-sm">2 days ago</span>
+          <span className="text-sm">
+            {dayjs(post.createdAt).format("YYYY-MM-DD · HH:MM")}
+          </span>
         </div>
         <span>{post.content}</span>
       </div>
