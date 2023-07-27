@@ -1,29 +1,38 @@
 import { GetServerSidePropsContext, InferGetServerSidePropsType, NextPage } from "next";
 import Head from "next/head";
-import { useRouter } from "next/router";
+import Image from "next/image";
 import { Layout } from "~/components/layout";
 import { LoadingPage } from "~/components/loading";
 import { api } from "~/utils/api";
+import { PostView } from "~/components/postview";
+import { createServerSideHelpers } from '@trpc/react-query/server';
+import { appRouter } from "~/server/api/root";
+import { prisma } from "~/server/db";
+import superjson from "superjson";
 
-import Image from "next/image";
+
+const ProfileFeed = (props: { userId: string }) => {
+    const { data, isLoading } = api.posts.getByUserId.useQuery({ userId: props.userId });
+
+    if (isLoading) return <LoadingPage />;
+
+    if (!data || data.length === 0) return <div>USer has not posted</div>;
+
+    return (
+        <div>
+            {data.map((fullPost) => <PostView {...fullPost} key={fullPost.post.id} />)}
+        </div>
+    );
+}
 
 const ProfilePage = (
     props: InferGetServerSidePropsType<typeof getServerSideProps>
 ) => {
-    // const router = useRouter();
-
-    // let username = router.query.slug;
-    // if (typeof username !== "string") {
-    //     throw new Error("No slug");
-    // }
-
-    // username = username.replace("@", "");
 
     const { username } = props;
 
-    const { data, isLoading } = api.profile.getUserByUserName.useQuery({
-        username
-    });
+    const { data, isLoading } = api.profile.getUserByUserName
+        .useQuery({ username });
 
     if (isLoading) return <LoadingPage />;
     if (!data) return <div>404</div>;
@@ -46,15 +55,13 @@ const ProfilePage = (
                 <div className="p-4 pt-2 text-xl">@{data.username ?? ""}</div>
 
                 <div className="border-b border-slate-400 w-full"></div>
+                <ProfileFeed userId={data.id} />
             </Layout>
         </>
     );
 };
 
-import { createServerSideHelpers } from '@trpc/react-query/server';
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import superjson from "superjson";
+
 
 export const getServerSideProps = async (
     context: GetServerSidePropsContext<{ slug: string }>
@@ -67,12 +74,12 @@ export const getServerSideProps = async (
     });
 
     const slug = context.params?.slug;
-    console.log(slug);
     if (typeof slug !== "string") {
         throw new Error("No slug");
     }
 
     const username = slug.replace("@", "");
+    console.log(username);
 
     await helpers.profile.getUserByUserName.prefetch({ username });
     return {
@@ -82,6 +89,5 @@ export const getServerSideProps = async (
         }
     }
 }
-
 
 export default ProfilePage;
