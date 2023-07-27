@@ -9,6 +9,7 @@ import { createServerSideHelpers } from '@trpc/react-query/server';
 import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
 import superjson from "superjson";
+import { serverHelper } from "~/server/helpers";
 
 
 const ProfileFeed = (props: { userId: string }) => {
@@ -61,17 +62,11 @@ const ProfilePage = (
     );
 };
 
-
-
 export const getServerSideProps = async (
     context: GetServerSidePropsContext<{ slug: string }>
 ) => {
 
-    const helpers = createServerSideHelpers({
-        router: appRouter,
-        ctx: { prisma, userId: null },
-        transformer: superjson,
-    });
+    const helpers = serverHelper();
 
     const slug = context.params?.slug;
     if (typeof slug !== "string") {

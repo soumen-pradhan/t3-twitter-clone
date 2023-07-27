@@ -44,6 +44,22 @@ export const postsRouter = createTRPCRouter({
       return addUserDataToPosts(posts);
     }),
 
+  getById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const post = await ctx.prisma.post
+        .findUnique({ where: { id: input.id } });
+
+      if (!post) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: ``
+        });
+      }
+
+      return (await addUserDataToPosts([post]))[0];
+    }),
+
   getByUserId: publicProcedure
     .input(z.object({ userId: z.string() }))
     .query(({ ctx, input }) => {

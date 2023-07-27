@@ -3,5 +3,6 @@
 @tailwind utilities;
 
 body {
-    @apply bg-teal-900 text-orange-400
+    @apply bg-teal-900 text-orange-400;
+    overscroll-behavior: none;
 }
